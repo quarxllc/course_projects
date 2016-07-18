@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+<h1>n-Body Simulation</h1>
+
+
+<canvas id="canvas"></canvas>
+
+<script>
+
+
+function nBodyProblem(parameters) {
+    
+    this.g = parameters.g;
+    this.law = parameters.law;
+    this.dt = parameters.dt;
+    this.masses = parameters.masses;
+    
+}
+
+nBodyProblem.prototype = {
+    
+    constructor: nBodyProblem,
+    
+    getDistance: function(m1, m2) {
+        
+        return Math.pow((m1.x - m2.x) * (m1.x - m2.x) + (m1.y - m2.y) * (m1.y - m2.y), this.law);
+        
+    },
+    
+    updatePositionVectors: function() {
+        
+        var massesLength = this.masses.length;
+        
+        for (var i = 0; i < massesLength; i++) {
+            
+            this.masses[i].x += this.masses[i].vx * this.dt;
+            this.masses[i].y += this.masses[i].vy * this.dt;
+          
+        }
+        
+        return this;
+        
+    },
+    
+    updateVelocityVectors: function() {
+        
+        var massesLength = this.masses.length;
+        
+        var accelerationVectorX = 0;
+        var accelerationVectorY = 0;
+       
+        
+        for (var i = 0; i < massesLength; i++) {
+            
+            for (var j = 0; j < massesLength; j++) {
+                
+                if (i !== j) {
+                    
+                    accelerationVectorX += (this.g * this.masses[j].m) * (this.masses[j].x - this.masses[i].x) / this.getDistance(this.masses[i], this.masses[j]);
+                    
+                    accelerationVectorY += (this.g * this.masses[j].m) * (this.masses[j].y - this.masses[i].y) / this.getDistance(this.masses[i], this.masses[j]);
+               
+                    
+                }
+                
+            }
+            
+            this.masses[i].vx += accelerationVectorX * this.dt;
+            this.masses[i].vy += accelerationVectorY * this.dt;
+
+            
+            accelerationVectorX = 0;
+            accelerationVectorY = 0;
+           
+            
+        }
+        
+        return this;
+        
+    }
+    
+};
+
+
+var bodies = [
+              
+              {
+              name: "Sun",
+              m: 1,
+              x: .003681841089373639,
+              y: .001062062777813871,
+              vx: 4.997664137990896E-4,
+              vy: .0024485294683556334,
+          
+              }, {
+              name: "Mercury",
+              m: 1.65956463E-7,
+              x: -.3427070643548534,
+              y: -.2713995441026107,
+              vx: 4.2519113148705125,
+              vy: -7.615328026069861,
+              }, {
+              name: "Venus",
+              m: 2.44699613E-6,
+              x: -.1643201817358734,
+              y: .6999107258696017,
+              vx: -7.207316613421397,
+              vy: -1.7653334768806017,
+            
+              }, {
+              name: "Earth",
+              m: 3.0024584e-6,
+              x: .6524623397822868,
+              y: .7488626915135392,
+              vx: -4.8503871535060235,
+              vy: 4.098470771187063,
+        
+              }, {
+              name: "Moon",
+              m: 3.69396868E-8,
+              x: .650820376532926,
+              y: .746764854297994,
+              vx: -4.681975246756648,
+              vy: 3.9757614264517613,
+
+              }
+              
+              ];
+              
+              var colors = [ "red","blue","green","yellow","black"];
+              
+              var sunToMoon = new nBodyProblem({
+                                               g: 39.5,
+                                               law: 1.5,
+                                               dt: 0.0005,
+                                               masses: bodies
+                                               });
+                                               var canvas = document.querySelector('#canvas');
+                                               var ctx = canvas.getContext('2d');
+                                               var w = canvas.width = window.innerWidth;
+                                               var h = canvas.height = window.innerHeight;
+                                               
+                                               
+                                               ctx.translate(w / 2, h / 2);
+                                               
+                                               
+                                               (function moveBodies() {
+                                                
+                                                var scale = 400;
+                                                
+                                                ctx.clearRect(-0.5 * w, -0.5 * h, w, h);
+                                                
+                                                for (var i = 0, len = sunToMoon.masses.length; i < len; i++) {
+                                                
+                                                ctx.beginPath();
+                                                ctx.arc(sunToMoon.masses[i].x * scale, sunToMoon.masses[i].y * scale, 10, 0, 2 * Math.PI);
+                                                ctx.fillStyle = colors[i];
+                                                ctx.fill();
+
+                                                
+                                                
+                                                }
+                                                
+                                                
+                                                sunToMoon.updateVelocityVectors().updatePositionVectors();
+                                                
+                                                requestAnimationFrame(moveBodies);
+                                                
+    }());
+</script>
